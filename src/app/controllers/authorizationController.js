@@ -1,3 +1,4 @@
+import * as Yup from 'yup';
 import Authorization from '../models/authorization';
 
 class AuthorizationController {
@@ -31,6 +32,18 @@ class AuthorizationController {
   }
 
   async store(req, res) {
+    const schema = Yup.object().shape({
+      device: Yup.string().required(),
+      user: Yup.string().required(),
+      enabled: Yup.boolean().required(),
+      startDate: Yup.date(),
+      endDate: Yup.date(),
+      createdAt: Yup.date(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Erro de validação' });
+    }
     try {
       const authorization = await Authorization.create(req.body);
       return res.send({ authorization });

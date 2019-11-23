@@ -1,5 +1,5 @@
 import MQTT from 'async-mqtt';
-
+import * as Yup from 'yup';
 import Device from '../models/device';
 import mqttConfig from '../../config/mqtt';
 
@@ -16,6 +16,7 @@ class DeviceController {
   async show(req, res) {
     try {
       const device = await Device.findById(req.params.deviceId);
+      if (!device) return res.status(400).send({ error: 'Device not found' });
       return res.send({ device });
     } catch (err) {
       return res.status(400).send({ error: 'Error loading device' });
@@ -23,6 +24,18 @@ class DeviceController {
   }
 
   async store(req, res) {
+    const schema = Yup.object().shape({
+      name: Yup.string().required(),
+      topicToWrite: Yup.string().required(),
+      topicToRead: Yup.string().required(),
+      description: Yup.string(),
+      status: Yup.string(),
+      createdAt: Yup.date(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Erro de validação' });
+    }
     try {
       const device = await Device.create(req.body);
       return res.send({ device });
@@ -37,6 +50,8 @@ class DeviceController {
     const { value } = req.body;
     try {
       const device = await Device.findById(req.params.deviceId);
+      if (!device) return res.status(400).send({ error: 'Device not found' });
+
       topicPublish = device.topicToWrite;
     } catch (err) {
       return res.status(400).send({ error: 'Error loading device' });
@@ -51,13 +66,10 @@ class DeviceController {
         username: mqttConfig.mqtt_login,
         password: mqttConfig.mqtt_password,
       });
-      // When passing async functions as event listeners, make sure to have a try catch block
       const doStuff = async () => {
         try {
           await client.publish(topicPublish, value);
-          // This line doesn't run until the server responds to the publish
           await client.end();
-          // This line doesn't run until the client has disconnected without error
         } catch (e) {
           // Do something about it!
           result = 'Error on connecting and publishing';
@@ -78,9 +90,7 @@ class DeviceController {
       const { deviceId } = req.params;
 
       let device = await Device.findById(deviceId);
-      if (!device) {
-        return res.status(400).send({ error: 'Device not found' });
-      }
+      if (!device) return res.status(400).send({ error: 'Device not found' });
 
       // name, description, topicPublish, topicToWrite = req.body;
       device = await Device.findByIdAndUpdate(deviceId, req.body, {
@@ -94,7 +104,9 @@ class DeviceController {
 
   async delete(req, res) {
     try {
-      await Device.findByIdAndRemove(req.params.deviceId);
+      const device = await Device.findByIdAndRemove(req.params.deviceId);
+      if (!device) return res.status(400).send({ error: 'Device not found' });
+
       return res.status(204).send();
     } catch (err) {
       return res.status(400).send({ error: 'Error deleting device' });
