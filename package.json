@@ -4,7 +4,10 @@
   "description": "API REST com NodeJS",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/server.js",
+    "production": "pm2 start dist/server.js --name lar_api",
+    "build": "sucrase ./src -d ./dist --transforms imports",
+    "start": "node dist/server.js"
   },
   "repository": {
     "type": "git",
@@ -23,9 +26,22 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "helmet": "^3.21.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.5.13",
-    "mqtt": "^3.0.0"
+    "mqtt": "^3.0.0",
+    "yup": "^0.27.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.7.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.1.1",
+    "nodemon": "^2.0.1",
+    "prettier": "^1.19.1",
+    "sucrase": "^3.10.1"
   }
 }
